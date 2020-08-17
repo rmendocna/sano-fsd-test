@@ -16,6 +16,7 @@ from flask import jsonify, request
 
 from core.auth.store import auth_store
 from core.config import config
+from core.models import Studies
 
 logger = logging.getLogger(__name__)
 public_api = Blueprint("public_api", __name__)
@@ -24,3 +25,11 @@ public_api = Blueprint("public_api", __name__)
 # -------
 # Write you endpoint to retrieve all available studies here.
 # -------
+
+@public_api.route("/research", methods=["GET"])
+def list_studies():
+    out = []
+    stds = Studies.select()
+    for std in stds:
+        out.append(std.__data__)
+    return jsonify(out)
