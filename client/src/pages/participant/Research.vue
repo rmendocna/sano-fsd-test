@@ -29,21 +29,21 @@
                                     <small>Actions</small>
                                 </div>
                             </div>
-                            <div v-for="std in studies" class="flex xs:flex-col md:flex-row w-full border border-sano-pink p-3">
+                            <div v-for="std in studies_enrolls" class="flex xs:flex-col md:flex-row w-full border border-sano-pink p-3">
                                 <div class="xs:w-full md:w-1/4 flex md:flex-col-reverse xs:flex-row-reverse xs:justify-between items-start md:border-l md:border-sano-pink pl-3">
-                                    <div :class="{'text-white text-center uppercase rounded-full text-sm mt-3 p-3 pt-1 pb-1': true, 'bg-sano-blue': std.visible, 'bg-sano-green': !std.visible}">
-                                        <small v-if="std.visible">Complete</small>
+                                    <div :class="{'text-white text-center uppercase rounded-full text-sm mt-3 p-3 pt-1 pb-1': true, 'bg-sano-blue': !std.enrolled, 'bg-sano-green': std.enrolled}">
+                                        <small v-if="!std.enrolled">Complete</small>
                                         <small v-else>In Progress</small>
                                     </div>
-                                    <div v-if="!std.visible" class="text-sano-red-orange">ENROLLED</div>
+                                    <div v-if="std.enrolled" class="text-sano-red-orange">ENROLLED</div>
                                 </div>
                                 <div class="xs:w-full md:w-1/2 md:order-first">
                                     <h1>{{ std.title }}</h1>
                                     <small class="text-xs text-grey">Run by Sano Genetics</small>
                                 </div>
                                 <div class="xs:w-full md:w-1/4 md:border-l md:border-sano-pink pl-3 flex flex-col-reverse">
-                                    <button v-if="!std.visible" class="leave sano-btn sano-btn-narrow">Leave study</button>
-                                    <button v-else class="join sano-btn sano-btn-narrow">Join study</button>
+                                    <button v-if="std.enrolled" @click="delete_enrollment(std.id)" class="leave sano-btn sano-btn-narrow">Leave study</button>
+                                    <button v-else @click="create_enrollment(std.id)" class="join sano-btn sano-btn-narrow">Join study</button>
                                 </div>
                             </div>
                         </div>
@@ -60,6 +60,9 @@
 <script>
 
 import LoggedinSidebarTemplate from "@/layouts/LoggedinSidebarTemplate";
+// import get_studies from "@/api/server/public"
+import { each, find } from "lodash";
+
 
 export default {
     name: "Research",
@@ -67,13 +70,51 @@ export default {
         LoggedinSidebarTemplate,
     },
     data () {
-        return {studies: []}
+        return {
+            studies: [],
+            enrollments: []
+            }
+    },
+    methods: {
+        delete_enrollment (study_id) {
+            let self = this;
+            self.$http.delete(`/enrol/delete/${study_id}`,
+                              {withCredentials: true}
+                       ).then((resp) => {
+                            let i = self.enrollments.indexOf(study_id)
+                            self.enrollments.splice(i, 1)
+                       })
+        },
+        create_enrollment (study_id) {
+            let self = this;
+            self.$http.post('/enrol/create',
+                            {study_id:study_id},
+                            // {withCredentials: true}
+                       ).then((resp) => {
+                            self.enrollments.push(study_id)
+                       }).catch((error) => {
+                            alert('Could not enroll')
+                       })
+        }
+    },
+    computed: {
+        studies_enrolls () {
+            let self = this
+            let stds = self.studies.slice()
+            stds.forEach(function (s) {
+                 s.enrolled = self.enrollments.indexOf(s.id) >= 0
+             })
+            return stds
+        }
     },
     mounted () {
         let self = this;
-        self.$http.get('/api/research').then((resp) => {
-            self.studies = resp.data
+        self.$http.get('/api/studies').then((resp) => {
+           self.studies = resp.data
         }).catch((error) => { alert('Could not get studies') })
+        self.$http.get('/enrollments', {}, {withCredentials: true}).then((resp) => {
+           self.enrollments = resp.data
+        }).catch((error) => { alert('Could not get enrollments') })
     }
 };
 </script>

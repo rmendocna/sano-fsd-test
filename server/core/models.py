@@ -15,6 +15,7 @@ import shortuuid
 from peewee import (
     BooleanField,
     CharField,
+    CompositeKey,
     DateField,
     DateTimeField,
     FloatField,
@@ -88,6 +89,9 @@ class Studies(BaseModel):
 class Enrollments(BaseModel):
     study = ForeignKeyField(Studies)
     user = ForeignKeyField(Users)
+
+    class Meta:
+        primary_key = CompositeKey('study', 'user')
 
 
 if os.getenv("TEST") == "True":
