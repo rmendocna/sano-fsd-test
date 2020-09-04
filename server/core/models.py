@@ -15,6 +15,7 @@ import shortuuid
 from peewee import (
     BooleanField,
     CharField,
+    CompositeKey,
     DateField,
     DateTimeField,
     FloatField,
@@ -83,6 +84,14 @@ class Studies(BaseModel):
     visible = BooleanField(default=False)
     description = CharField(1500, null=True)  # TBD what does null mean?
     researcher_email = CharField(100, default="")  # TBD shouldn't this be null instead of default "" if there is no researcher email specified? (will change this anyway)
+
+
+class Enrollments(BaseModel):
+    study = ForeignKeyField(Studies)
+    user = ForeignKeyField(Users)
+
+    class Meta:
+        primary_key = CompositeKey('study', 'user')
 
 
 if os.getenv("TEST") == "True":

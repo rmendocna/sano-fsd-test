@@ -4,7 +4,7 @@ import axios from "axios";
 export function get_studies() {
     return new Promise((resolve, reject) => {
         axios
-            .get("/studies")
+            .get("/api/studies")
             .then((response) => {
                 resolve(response);
             })
